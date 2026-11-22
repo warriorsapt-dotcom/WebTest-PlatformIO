@@ -3,6 +3,8 @@
 #include <WebServer.h>
 #include <esp_wifi.h>
 #include <esp_wifi_ap_get_sta_list.h>
+#include <esp_timer.h>
+#include <atomic>
 #include "Website.h"
 
 #include "secrets.h"
@@ -13,6 +15,25 @@ const IPAddress firstClientIp(192, 168, 4, 2);
 const IPAddress clientDns(8, 8, 4, 4);
 
 WebServer server(80);
+std::atomic<bool> internetSharingEnabled{false};
+
+String jsonString(const String &value) {
+  String result = "\"";
+  for (size_t i = 0; i < value.length(); ++i) {
+    const unsigned char c = value[i];
+    if (c == '"' || c == '\\') {
+      result += '\\';
+      result += static_cast<char>(c);
+    } else if (c < 0x20) {
+      char escaped[7];
+      snprintf(escaped, sizeof(escaped), "\\u%04x", c);
+      result += escaped;
+    } else {
+      result += static_cast<char>(c);
+    }
+  }
+  return result + '"';
+}
 
 void sendConnectedDevices() {
   wifi_sta_list_t clients = {};
@@ -47,9 +68,26 @@ void sendConnectedDevices() {
     json += mac;
     json += "\",\"ip\":\"";
     json += ip;
-    json += "\"}";
+    json += "\",\"rssi\":";
+    json += String(client.rssi);
+    json += '}';
   }
-  json += "]}";
+  wifi_config_t apConfig = {};
+  const bool haveConfig = esp_wifi_get_config(WIFI_IF_AP, &apConfig) == ESP_OK;
+  const bool routerConnected = WiFi.status() == WL_CONNECTED;
+  json += "],\"network\":{\"ssid\":" + jsonString(WiFi.softAPSSID());
+  json += ",\"ip\":" + jsonString(WiFi.softAPIP().toString());
+  json += ",\"mac\":" + jsonString(WiFi.softAPmacAddress());
+  json += ",\"channel\":" + String(WiFi.channel());
+  json += ",\"capacity\":" + (haveConfig ? String(apConfig.ap.max_connection) : String("null"));
+  json += ",\"routerConnected\":" + String(routerConnected ? "true" : "false");
+  json += ",\"routerSsid\":" + jsonString(routerConnected ? WiFi.SSID() : String());
+  json += ",\"routerIp\":" + jsonString(routerConnected ? WiFi.localIP().toString() : String());
+  json += ",\"routerRssi\":" + (routerConnected ? String(WiFi.RSSI()) : String("null"));
+  json += ",\"sharingEnabled\":" + String(routerConnected && internetSharingEnabled.load() ? "true" : "false");
+  json += ",\"uptimeSeconds\":" + String(static_cast<unsigned long>(esp_timer_get_time() / 1000000));
+  json += ",\"freeHeap\":" + String(ESP.getFreeHeap());
+  json += "}}";
   server.send(200, "application/json", json);
 }
 
@@ -58,13 +96,15 @@ void onRouterEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       Serial.print("Router assigned IP: ");
       Serial.println(WiFi.localIP());
-      Serial.println(WiFi.AP.enableNAPT(true)
+      internetSharingEnabled.store(WiFi.AP.enableNAPT(true));
+      Serial.println(internetSharingEnabled.load()
                        ? "Internet sharing enabled"
                        : "Could not enable internet sharing");
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       WiFi.AP.enableNAPT(false);
+      internetSharingEnabled.store(false);
       Serial.println("Router connection lost. Reconnecting...");
       break;
     default:

@@ -2,9 +2,21 @@
 
 PlatformIO firmware for an ESP32 Wi-Fi hotspot with internet sharing and a web page listing connected devices.
 
-The device list shows IP and MAC addresses, refreshes every five seconds, and supports manual refresh. It lists clients connected to the ESP32 hotspot.
+The Wi-Fi overview dashboard shows live hotspot and router metrics and refreshes every five seconds, with a manual refresh option.
+
+- Summary cards for connected clients, access point/SSID count, router link, and uptime.
+- Client RSSI quality groups (good, average, poor) that filter the device table when selected.
+- Search by IP or MAC address and sort by signal strength or IP address.
+- Client-count chart with 5-minute and 15-minute views, collected in the current browser tab.
+- Hotspot IP/MAC/channel, router connection, NAPT status, and available memory.
+
+RSSI is measured at the ESP32. History resets on page reload or detected ESP32 restart. Internet reachability is not tested; an active router link or NAPT does not prove internet access. SNR, interference, throughput, and 5 GHz metrics are not collected.
+
+The overview takes inspiration from [IBM's WiFi overview dashboard](https://www.ibm.com/docs/en/npi/1.3.1?topic=dashboards-wifi-overview-dashboard), adapted to the telemetry available on this ESP32.
 
 ## Website preview
+
+Earlier connected-devices view (the current firmware includes the expanded overview described above):
 
 ![ESP32 web dashboard showing two connected devices with their IP and MAC addresses](docs/images/connected-devices.png)
 
