@@ -16,9 +16,24 @@ The overview takes inspiration from [IBM's WiFi overview dashboard](https://www.
 
 ## Website preview
 
-Earlier connected-devices view (the current firmware includes the expanded overview described above):
+Live Wi-Fi overview with summary cards, client-count history, and signal-quality groups:
+
+![Wi-Fi overview showing two connected clients, router status, uptime, and client history](docs/images/wifi-overview.png)
+
+Signal-quality updates as both connected clients report good signal strength:
+
+![Wi-Fi dashboard showing both clients in the good RSSI signal-quality group](docs/images/wifi-signal-quality.png)
+
+Access point details, upstream connection, and searchable connected-device table:
+
+![Hotspot and router details with connected devices, IP and MAC addresses, and RSSI readings](docs/images/wifi-device-details.png)
+
+<details>
+<summary>Earlier connected-devices view</summary>
 
 ![ESP32 web dashboard showing two connected devices with their IP and MAC addresses](docs/images/connected-devices.png)
+
+</details>
 
 ## Setup
 
