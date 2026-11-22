@@ -4,6 +4,10 @@ PlatformIO firmware for an ESP32 Wi-Fi hotspot with internet sharing and a web p
 
 The device list shows IP and MAC addresses, refreshes every five seconds, and supports manual refresh. It lists clients connected to the ESP32 hotspot.
 
+## Website preview
+
+![ESP32 web dashboard showing two connected devices with their IP and MAC addresses](docs/images/connected-devices.png)
+
 ## Setup
 
 1. Install PlatformIO and open this project.
